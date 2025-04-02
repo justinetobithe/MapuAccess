@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
-        color: "#7393B3"
+        color: "#EC1F28"
     },
     ratingText: {
         fontSize: 18,

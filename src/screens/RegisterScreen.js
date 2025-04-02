@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { VStack, Input, Button, Text, FormControl, Center, Box, Select, HStack } from 'native-base';
+import { VStack, Input, Button, Text, FormControl, Center, Box, HStack } from 'native-base';
 import { useForm, Controller } from 'react-hook-form';
-import useAuthStore from '../store/authStore';
-import Toast from '../components/Toast';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
-import ImagePicker from 'react-native-image-crop-picker';
-import useStrandStore from '../store/strandStore';
+import Toast from '../components/Toast';
+import useAuthStore from '../store/authStore';
 
 export default function RegisterScreen({ navigation }) {
+    const { showToast } = Toast();
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [selectedRole, setSelectedRole] = useState('student');
+
     const { register, isLoading } = useAuthStore();
-    const [selectedStrand, setSelectedStrand] = useState(null);
-    const { strands, fetchStrands } = useStrandStore();
-    const { control, handleSubmit, formState: { errors }, reset } = useForm({
+    const { control, handleSubmit, formState: { errors }, reset, setValue } = useForm({
         defaultValues: {
             student_number: '',
             first_name: '',
@@ -21,38 +25,38 @@ export default function RegisterScreen({ navigation }) {
             email: '',
             password: '',
             confirmPassword: '',
-            strand_id: null,
             role: '',
-            status: null,
+            student_no: '',
+            employee_no: ''
         }
     });
 
-    const { showToast } = Toast();
-
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const onSubmit = async (data) => {
+        if (selectedRole === 'student' && !data.student_no) {
+            showToast("Student ID is required", "error");
+            return;
+        }
+
+        if (selectedRole === 'employee' && !data.employee_no) {
+            showToast("Employee ID is required", "error");
+            return;
+        }
+
         if (data.password !== data.confirmPassword) {
             showToast("Passwords do not match", "error");
             return;
         }
 
-        if (!selectedStrand) {
-            showToast("Please select a strand", "error");
-            return;
-        }
-
         try {
             const res = await register({
-                student_number: data.student_number,
                 first_name: data.first_name,
                 last_name: data.last_name,
                 email: data.email,
                 password: data.password,
-                role: 'student',
-                status: 1,
-                strand_id: selectedStrand,
+                role: selectedRole,
+                student_no: data.student_no,
+                employee_no: data.employee_no,
             });
 
             if (res.success) {
@@ -67,39 +71,18 @@ export default function RegisterScreen({ navigation }) {
         }
     };
 
-    useEffect(() => {
-        fetchStrands();
-    }, [fetchStrands]);
-
-    const handleCaptureImage = async () => {
-        try {
-            const image = await ImagePicker.openCamera({
-                width: 300,
-                height: 300,
-                cropping: true,
-            });
-            setSelectedImage(image.path);
-        } catch (error) {
-            console.log('Image capture cancelled', error);
+    const handleRoleChange = (role) => {
+        setSelectedRole(role);
+        if (role === 'student') {
+            setValue('employee_no', '');
+        } else if (role === 'employee') {
+            setValue('student_no', '');
         }
     };
 
-    const handleUploadImage = async () => {
-        try {
-            const image = await ImagePicker.openPicker({
-                width: 300,
-                height: 300,
-                cropping: true,
-            });
-            setSelectedImage(image.path);
-        } catch (error) {
-            console.log('Image upload cancelled', error);
-        }
-    };
 
     return (
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-
             <Center>
                 <View style={styles.logoContainer}>
                     <Image
@@ -108,35 +91,65 @@ export default function RegisterScreen({ navigation }) {
                     />
                 </View>
             </Center>
+
             <Center flex={1} px={4}>
                 <Box w="100%" maxW="300px">
                     <VStack space={4}>
-                        <FormControl isInvalid={errors.name}>
-                            <FormControl.Label>Student No.</FormControl.Label>
-                            <Controller
-                                control={control}
-                                name="student_number"
-                                rules={{
-                                    required: 'Student number is required',
-                                    pattern: {
-                                        value: /^[0-9]+$/,
-                                        message: 'Please enter a valid student number'
-                                    }
-                                }}
-                                render={({ field: { onChange, onBlur, value } }) => (
-                                    <Input
-                                        placeholder="Enter your student number"
-                                        keyboardType="numeric"  
-                                        onBlur={onBlur}
-                                        onChangeText={onChange}
-                                        value={value}
-                                    />
-                                )}
-                            />
-                            {errors.student_number && <Text color="red.500">{errors.student_number.message}</Text>}
-                        </FormControl>
 
-                        <FormControl isInvalid={errors.name}>
+                        <HStack justifyContent="center" space={2} mb={4} mt={5}>
+                            <TouchableOpacity
+                                style={[styles.toggleButton, selectedRole === 'employee' && styles.activeButton]}
+                                onPress={() => handleRoleChange('employee')}
+                            >
+                                <FontAwesome5 name="user-tie" size={20} color={selectedRole === 'employee' ? "#fff" : "#000"} />
+                                <Text color={selectedRole === 'employee' ? "white" : "black"}>Employee</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.toggleButton, selectedRole === 'student' && styles.activeButton]}
+                                onPress={() => handleRoleChange('student')}
+                            >
+                                <FontAwesome6 name="user-graduate" size={20} color={selectedRole === 'student' ? "#fff" : "#000"} />
+                                <Text color={selectedRole === 'student' ? "white" : "black"}>Student</Text>
+                            </TouchableOpacity>
+                        </HStack>
+
+                        {selectedRole === 'student' ? (
+                            <FormControl>
+                                <FormControl.Label>Student ID</FormControl.Label>
+                                <Controller
+                                    control={control}
+                                    name="student_no"
+                                    render={({ field: { onChange, onBlur, value } }) => (
+                                        <Input
+                                            placeholder="Enter Student ID"
+                                            onBlur={onBlur}
+                                            onChangeText={onChange}
+                                            value={value}
+                                            keyboardType="numeric"
+                                        />
+                                    )}
+                                />
+                            </FormControl>
+                        ) : (
+                            <FormControl>
+                                <FormControl.Label>Employee ID</FormControl.Label>
+                                <Controller
+                                    control={control}
+                                    name="employee_no"
+                                    render={({ field: { onChange, onBlur, value } }) => (
+                                        <Input
+                                            placeholder="Enter Employee ID"
+                                            onBlur={onBlur}
+                                            onChangeText={onChange}
+                                            value={value}
+                                            keyboardType="numeric"
+                                        />
+                                    )}
+                                />
+                            </FormControl>
+                        )}
+
+                        <FormControl isInvalid={errors.first_name}>
                             <FormControl.Label>First Name</FormControl.Label>
                             <Controller
                                 control={control}
@@ -155,7 +168,7 @@ export default function RegisterScreen({ navigation }) {
                             {errors.first_name && <Text color="red.500">{errors.first_name.message}</Text>}
                         </FormControl>
 
-                        <FormControl isInvalid={errors.name}>
+                        <FormControl isInvalid={errors.last_name}>
                             <FormControl.Label>Last Name</FormControl.Label>
                             <Controller
                                 control={control}
@@ -260,33 +273,10 @@ export default function RegisterScreen({ navigation }) {
                             {errors.confirmPassword && <Text color="red.500">{errors.confirmPassword.message}</Text>}
                         </FormControl>
 
-                        <FormControl isInvalid={errors.strand}>
-                            <FormControl.Label>Strand</FormControl.Label>
-                            <Controller
-                                control={control}
-                                name="strand_id"
-                                render={({ field: { onChange, value } }) => (
-                                    <Select
-                                        placeholder="Select strand"
-                                        selectedValue={value}
-                                        onValueChange={(itemValue) => {
-                                            onChange(itemValue);
-                                            setSelectedStrand(itemValue);
-                                        }}
-                                    >
-                                        {strands.map(strand => (
-                                            <Select.Item key={strand.id} label={strand.name} value={strand.id} />
-                                        ))}
-                                    </Select>
-                                )}
-                            />
-                            {errors.strand_id && <Text color="red.500">{errors.strand_id.message || "Strand selection is required"}</Text>}
-                        </FormControl>
-
                         <Button
                             isLoading={isLoading}
                             onPress={handleSubmit(onSubmit)}
-                            backgroundColor="#7393B3"
+                            backgroundColor="#EC1F28"
                             style={styles.buttonRegister}
                         >
                             {isLoading ? (
@@ -295,6 +285,7 @@ export default function RegisterScreen({ navigation }) {
                                 "Register"
                             )}
                         </Button>
+
                     </VStack>
                 </Box>
             </Center>
@@ -303,10 +294,6 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        backgroundColor: "#fff",
-        flex: 1,
-    },
     logoContainer: {
         width: 300,
         height: 200,
@@ -317,34 +304,24 @@ const styles = StyleSheet.create({
         height: undefined,
         resizeMode: 'contain',
     },
-    divider: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 1,
-    },
-    line: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#ccc',
-    },
-    orText: {
-        marginHorizontal: 1,
-    },
-    googleButton: {
+    toggleButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: "#000",
+        backgroundColor: "#f0f0f0",
+        flex: 1,
     },
-    googleIcon: {
-        width: 20,
-        height: 20,
-        marginRight: 10,
-    },
-    registerLink: {
-        marginTop: 10,
+    activeButton: {
+        backgroundColor: "#EC1F28",
     },
     buttonRegister: {
-        marginBottom: 40,
-        height: 45
-    }
+        marginTop: 10,
+        marginBottom: 30
+    },
 });
+

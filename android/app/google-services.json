@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "781055751355",
+        "project_id": "mapuaaccess",
+        "storage_bucket": "mapuaaccess.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:781055751355:android:d824886d7bdfe2b8db259e",
+                "android_client_info": {
+                    "package_name": "com.mapuaccess"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyCXtgko7NT3-yx48d0igf4M8Z06iezSnCA"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

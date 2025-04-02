@@ -8,35 +8,26 @@ const useAuthStore = create((set) => ({
     isLoading: false,
     splashLoading: false,
 
-    register: async ({ student_number, first_name, last_name, email, address, phone_number, password, role, status, strand_id, googleId = null, googleAvatar = null, image = null }) => {
+    register: async ({ first_name, last_name, email, password, role, student_no = null, employee_no = null }) => {
         set({ isLoading: true });
         try {
             const formData = new FormData();
-            formData.append('student_number', student_number);
             formData.append('first_name', first_name);
             formData.append('last_name', last_name);
             formData.append('email', email);
-            formData.append('address', address);
-            formData.append('phone', phone_number);
             formData.append('role', role);
-            formData.append('status', status);
-            formData.append('strand_id', strand_id);
+            formData.append('password', password);
+            formData.append('student_no', student_no);
+            formData.append('employee_no', employee_no);
 
-            if (googleId) {
-                formData.append('google_id', googleId);
-                formData.append('google_avatar', googleAvatar);
-            } else {
-                formData.append('password', password);
-            }
-
-            if (image) {
-                formData.append('image', {
-                    uri: image,
-                    name: `image_${Date.now()}.png`,
-                    fileName: 'image',
-                    type: 'image/png'
-                });
-            }
+            // if (image) {
+            //     formData.append('image', {
+            //         uri: image,
+            //         name: `image_${Date.now()}.png`,
+            //         fileName: 'image',
+            //         type: 'image/png'
+            //     });
+            // }
 
             console.log("FormData being sent:", formData);
 
@@ -51,11 +42,9 @@ const useAuthStore = create((set) => ({
                 return { success: true, message: res.data.message || 'Registration successful!' };
             } else {
                 set({ isLoading: false });
-                // console.log("API response error:", res.data.message);
                 return { success: false, message: res.data.message || 'Registration failed' };
             }
         } catch (e) {
-            // console.log(`Register error: ${e.response?.data || e.message}`);
             set({ isLoading: false });
             return { success: false, message: 'An error occurred during registration.' };
         }

@@ -143,6 +143,7 @@ android {
         versionName "1.0"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
         missingDimensionStrategy 'react-native-camera', 'general'
+        multiDexEnabled true
 
         if (isNewArchitectureEnabled()) {
             // We configure the CMake build only if you decide to opt-in for the New Architecture.
@@ -275,8 +276,10 @@ dependencies {
     implementation project(':react-native-svg') 
     implementation project(':react-native-camera')
     implementation project(':react-native-fs')
+    implementation project(':@react-native-camera-roll_camera-roll')  
 
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
+
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0" 
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
         exclude group:'com.facebook.fbjni'
@@ -298,7 +301,7 @@ dependencies {
         }
     } else {
         implementation jscFlavor
-    }
+    }  
 }
 
 if (isNewArchitectureEnabled()) {

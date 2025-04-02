@@ -8,6 +8,7 @@ import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { TouchableOpacity, Alert } from 'react-native';
 import useAuthStore from '../store/authStore';
+import VehicleScreen from '../screens/Vehicle/VehicleScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -21,7 +22,7 @@ export default function DrawerStack({ navigation }) {
             drawerContent={props => <AppDrawer {...props} />}
             initialRouteName="Home"
             screenOptions={{
-                drawerActiveBackgroundColor: '#7393B3',
+                drawerActiveBackgroundColor: '#EC1F28',
                 drawerActiveTintColor: '#fff',
                 drawerInactiveTintColor: '#333',
                 drawerLabelStyle: {
@@ -39,22 +40,42 @@ export default function DrawerStack({ navigation }) {
                         <Ionicons name="home-outline" size={22} color={color} />
                     ),
                     headerStyle: {
-                        backgroundColor: '#7393B3',
+                        backgroundColor: '#EC1F28',
                     },
                     headerTitleStyle: {
                         color: '#fff',
                     },
                     headerTintColor: "#fff",
-                    headerRight: () => (
-                        userInfo?.role == "passenger" && (
-                            <TouchableOpacity onPress={() => navigation.navigate("CurrentBooking")}>
-                                <MaterialCommunityIcons name="book-marker" size={22} color="#fff" />
-                            </TouchableOpacity>
-                        )
-                    ),
-
                 }}
             />
+            {
+                userInfo.role != "guard" && (
+                    <Drawer.Screen
+                        name="VehicleScreen"
+                        component={VehicleScreen}
+                        options={{
+                            title: "Vehicle",
+                            drawerIcon: ({ color }) => (
+                                <Ionicons name="car-sport" size={22} color={color} />
+                            ),
+                            headerStyle: {
+                                backgroundColor: '#EC1F28',
+                            },
+                            headerTitleStyle: {
+                                color: '#fff',
+                            },
+                            headerTintColor: "#fff",
+                            headerRight: () => (
+                                <TouchableOpacity onPress={() => navigation.navigate("AddVehicleScreen")}>
+                                    <Ionicons name="add" size={22} color="#fff" />
+                                </TouchableOpacity>
+                            ),
+
+                        }}
+                    />
+
+                )
+            }
 
         </Drawer.Navigator>
     );

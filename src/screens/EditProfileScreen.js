@@ -83,7 +83,7 @@ export default function EditProfileScreen() {
 //                         />
 //                     </FormControl>
 //                     <FormControl isInvalid mb="4">
-//                         <Button style={{ backgroundColor: '#7393B3' }} mt="2" onPress={onUpdate}>
+//                         <Button style={{ backgroundColor: '#EC1F28' }} mt="2" onPress={onUpdate}>
 //                             <Text style={{ color: '#fff' }}>Update</Text>
 //                         </Button>
 //                     </FormControl>

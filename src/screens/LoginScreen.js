@@ -95,7 +95,7 @@ export default function LoginScreen({ navigation }) {
                     <Button
                         onPress={handleSubmit(onLogin)}
                         variant="solid"
-                        backgroundColor="#7393B3"
+                        backgroundColor="#EC1F28"
                         isLoading={isLoading}
                         style={styles.buttonLogin}
                     >

@@ -1,179 +1,76 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Text, PermissionsAndroid } from 'react-native';
-import { Button } from 'native-base';
-import useAuthStore from '../store/authStore';
-import QRCode from 'react-native-qrcode-svg';
-import dateFormat from 'dateformat';
-import { CameraRoll } from 'react-native';
-import RNFS from 'react-native-fs';
-import Toast from '../components/Toast';
+import React, { useEffect, useState } from "react";
+import { Box, Text, VStack, HStack, Avatar, Button, Icon, Image, Center } from "native-base";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import dateFormat from "dateformat";
+import useAuthStore from "../store/authStore";
 
-const StudentScreen = () => {
+export default function StudentScreen() {
     const { userInfo } = useAuthStore();
-    const [dateTime, setDateTime] = useState(new Date());
-    const [busy, setBusy] = useState(false);
-    const [imageSaved, setImageSaved] = useState(false);
-    const qrCodeRef = useRef(null);
-    const { showToast } = Toast();
-    const studentNumber = userInfo?.student?.student_number;
-    const firstName = userInfo?.first_name;
-    const lastName = userInfo?.last_name;
+    const [currentTime, setCurrentTime] = useState(new Date());
 
-    const greeting = `Hello, ${firstName} ${lastName}!`;
+    console.log("userInfo ", userInfo)
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setDateTime(new Date());
+            setCurrentTime(new Date());
         }, 1000);
-
         return () => clearInterval(timer);
     }, []);
 
-    const formattedDate = dateFormat(dateTime, "mmmm d, yyyy");
-    const formattedTime = dateFormat(dateTime, "h:MM TT");
+    const formattedTime = dateFormat(currentTime, "hh:MM TT");
+    const formattedDate = dateFormat(currentTime, "dddd, mmmm d, yyyy");
 
-    const currentHour = dateTime.getHours();
-    const currentDay = dateTime.getDay();
-    const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const currentDayName = weekdays[currentDay];
-    let customMessage = "";
-
-    if (currentDay > 0 && currentDay < 6) {
-        customMessage = `Hi, today is ${currentDayName}. You have a class to attend!`;
-        if (currentHour >= 6 && currentHour < 7) {
-            customMessage = "Hurry up! You're about to be late.";
-        } else if (currentHour >= 8 && currentHour < 16) {
-            customMessage = "Good luck in class!";
-        } else if (currentHour >= 16 && currentHour < 17) {
-            customMessage = "You're about to go home. Please scan your QR attendance to clock out.";
-        }
-    } else {
-        customMessage = "";
-    }
-
-    const requestPermissions = async () => {
-        try {
-            const granted = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                {
-                    title: 'Storage Permission',
-                    message: 'We need access to your storage to save the QR code.',
-                    buttonNeutral: 'Ask Me Later',
-                    buttonNegative: 'Cancel',
-                    buttonPositive: 'OK',
-                },
-            );
-            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                console.log('Permission denied');
-                return false;
-            }
-            return true;
-        } catch (err) {
-            console.warn(err);
-            return false;
-        }
-    };
-
-
-    const saveQrToDisk = async () => {
-        if (busy) return;
-
-        setBusy(true);
-
-        const hasPermission = await requestPermissions();
-        if (!hasPermission) {
-            setBusy(false);
-            showToast('Permission denied!', 'info');
-            return;
-        }
-
-        qrCodeRef.current.toDataURL((data) => {
-            const filePath = `${RNFS.CachesDirectoryPath}/${studentNumber}.png`;
-
-            RNFS.writeFile(filePath, data, 'base64')
-                .then(() => {
-                    return CameraRoll.save(filePath, { type: 'photo' });
-                })
-                .then(() => {
-                    setImageSaved(true);
-                    setBusy(false);
-                    showToast("Saved to gallery!", "success");
-                })
-                .catch((error) => {
-                    setBusy(false);
-                    showToast("Error saving image!", "error");
-                });
-        });
+    const getGreeting = () => {
+        const hour = currentTime.getHours();
+        if (hour < 12) return "Good Morning";
+        if (hour < 18) return "Good Afternoon";
+        return "Good Evening";
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.greeting}>{greeting}</Text>
-            <Text style={styles.dateTime}>{formattedDate}, {formattedTime}</Text>
-            {customMessage && <Text style={styles.message}>{customMessage}</Text>}
+        <Box flex={1} bg="gray.100">
+            <Center mt={2}>
+                <Image
+                    source={require('../assets/img/logo.png')}
+                    alt="University Logo"
+                    width="180"
+                    height="180"
+                    resizeMode="contain"
+                />
+            </Center>
 
-            <View style={styles.qrCodeWrapper}>
-                <QRCode value={studentNumber || "No Student Number"} size={300} getRef={(ref) => (qrCodeRef.current = ref)} />
-            </View>
+            <Box p={5}>
+                <Text fontSize="xl" fontWeight="bold" color="gray.700">
+                    {getGreeting()}, {userInfo?.first_name + " " + userInfo?.last_name} 👋
+                </Text>
+                <Text fontSize="md" color="gray.500">{formattedDate}</Text>
+                <Text fontSize="2xl" fontWeight="bold" color="gray.700">{formattedTime}</Text>
 
-            <Button
-                onPress={saveQrToDisk}
-                variant="solid"
-                backgroundColor="#7393B3"
-                style={styles.buttonSaveQr}
-            >
-                Save QR to Gallery
-            </Button>
+                <Box bg="white" shadow={2} borderRadius="md" p={4} mt={4}>
+                    <HStack space={4} alignItems="center">
+                        <Avatar source={require('../assets/img/avatar.png')} size="lg" />
+                        <VStack>
+                            <Text fontSize="lg" fontWeight="bold">{userInfo?.first_name + " " + userInfo?.last_name}</Text>
+                            <Text fontSize="md" color="gray.500">Student | {userInfo?.student?.student_no || "N/A"}</Text>
+                        </VStack>
+                    </HStack>
+                </Box>
 
-            {imageSaved && <Text>QR Code Saved Successfully!</Text>}
-        </View>
+                <VStack space={4} mt={5}>
+                    <Button leftIcon={<Icon as={Ionicons} name="calendar" size="md" />} colorScheme="blue">
+                        View Schedule
+                    </Button>
+                    <Button leftIcon={<Icon as={Ionicons} name="book" size="md" />} colorScheme="red">
+                        Assignments
+                    </Button>
+                    <Button leftIcon={<Icon as={Ionicons} name="megaphone" size="md" />} colorScheme="green">
+                        Announcements
+                    </Button>
+                    <Button leftIcon={<Icon as={Ionicons} name="document-text" size="md" />} colorScheme="purple">
+                        Grades & Reports
+                    </Button>
+                </VStack>
+            </Box>
+        </Box>
     );
-};
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-        padding: 20,
-    },
-    greeting: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#000000',
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    dateTime: {
-        fontSize: 16,
-        color: '#000000',
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    message: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#FF0000',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    qrCodeWrapper: {
-        marginTop: 20,
-        padding: 15,
-        borderWidth: 2,
-        borderColor: '#000000',
-        borderRadius: 10,
-        backgroundColor: '#FFFFFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    qrCodeContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    buttonSaveQr: {
-        height: 45,
-        marginTop: 50
-    }
-});
-
-export default StudentScreen;
+}
